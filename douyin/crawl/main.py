@@ -144,7 +144,7 @@ def main():
         xlsx_data = [[item[k] for k in keys] for item in data]
         xlsx_data.insert(0, keys)
         try:
-            w = Writer("douyin", 'xlsx')
+            w = Writer(f"douyin_{int(time.time())}", 'xlsx')
             w.write(xlsx_data)
         except Exception as ee:
             print(ee)
