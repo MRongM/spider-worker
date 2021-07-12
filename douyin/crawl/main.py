@@ -19,6 +19,7 @@ from otils import sscroll, sfindes, sget_attr, sfinde, stext, Writer
 def get_video_list():
     login = False
     scroll_num = 4
+    video_page = []
     for word in keywords:
         driver.get(url2.format(word))
         cnt = 0
@@ -35,7 +36,6 @@ def get_video_list():
             dis *= cnt
 
         elems = sfindes(driver, '//a')
-        video_page = []
         f = open("result.txt", "w")
         for e in elems:
             href = sget_attr(e, 'href')
@@ -46,7 +46,7 @@ def get_video_list():
                 if 'www.douyin.com/video' in href:
                     video_page.append((href, word))
         f.close()
-        return video_page
+    return video_page
 
 
 video_tags = {
@@ -141,7 +141,7 @@ def main():
             f.write("\n")
 
         keys = list(data[0].keys())
-        xlsx_data = [[item[k] for k in keys] for item in data]
+        xlsx_data = [[item.get(k, '') for k in keys] for item in data]
         xlsx_data.insert(0, keys)
         try:
             w = Writer(f"douyin_{int(time.time())}", 'xlsx')
