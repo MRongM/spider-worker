@@ -31,7 +31,7 @@ def get_video_list():
         dis = 5000
         while cnt < scroll_num:
             sscroll(driver, dis)
-            time.sleep(5)
+            time.sleep(2)
             cnt += 1
             dis *= cnt
 
@@ -78,11 +78,10 @@ def video_info(video_data):
                 text = stext(sfinde(driver, xpath))
 
             print(name, xpath, text)
-            if text:
-                item[name] = text
+            item[name] = text or ''
         print(item)
         res.append(item)
-        time.sleep(3)
+        time.sleep(2)
     if res:
         with open("video_result.txt", 'a', encoding='utf8') as f:
             f.write('\n'.join([str(i) for i in res]))
@@ -103,8 +102,13 @@ user_tags = {
 
 
 def user_info(user_urls):
+    done = {}
     res = []
     for url in user_urls:
+        if url in done:
+            res.append(done[url])
+            continue
+
         driver.get(url)
         item = {}
         for name, xpath in user_tags.items():
@@ -114,12 +118,12 @@ def user_info(user_urls):
                 text = stext(sfinde(driver, xpath))
 
             print(name, xpath, text)
-            if text:
-                item[name] = text
+            item[name] = text or ''
 
         print(item)
         res.append(item)
-        time.sleep(3)
+        done[url]=item
+        time.sleep(2)
     if res:
         with open("user_result.txt", 'a', encoding='utf8') as f:
             f.write('\n'.join(str(i) for i in res))
@@ -127,17 +131,18 @@ def user_info(user_urls):
 
     return res
 
+import json
 
 def main():
     video_page = get_video_list()
     video_page = set(video_page)
     video_data = video_info(video_page)
-    user_urls = [i['video_dy_link_x'] for i in video_data]
+    user_urls = [i['video_dy_link_x'] for i in video_data if 'video_dy_link_x' in i]
     user_data = user_info(user_urls)
     data = [{**v, **u} for v, u in zip(video_data, user_data)]
     if data:
         with open('final.txt', 'a', encoding='utf8') as f:
-            f.write('\n'.join(str(i) for i in data))
+            f.write('\n'.join(json.dumps(i) for i in data))
             f.write("\n")
 
         keys = list(data[0].keys())
