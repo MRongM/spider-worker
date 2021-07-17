@@ -10,7 +10,7 @@ url = "https://www.douyin.com/search/{}?aid=9d40feab-4eb2-4977-86f7-ab523d593d65
 url2 = "https://www.douyin.com/search/{}?publish_time=7&sort_type=0&source=search_sug&type=video"
 driver = Chrome(executable_path='../pack/chromedriver.exe', chrome_options=chrome_options)
 
-keywords = ['狗子']
+keywords = ['狗子',"帽子","猫子",'足球']
 
 import time
 from otils import sscroll, sfindes, sget_attr, sfinde, stext, Writer
@@ -44,7 +44,8 @@ def get_video_list():
             if href:
                 f.write(f"{href},{word}\n")
                 if 'www.douyin.com/video' in href:
-                    video_page.append((href, word))
+                    host = href.split("?")[0]
+                    video_page.append((host, word))
         f.close()
     return video_page
 
@@ -70,7 +71,7 @@ def video_info(video_data):
     res = []
     for url, word in video_data:
         driver.get(url)
-        item = {'video_url': url, 'keyword': word}
+        item = {'video_url': url.split('?')[0], 'keyword': word}
         for name, xpath in video_tags.items():
             if isinstance(xpath, list):
                 text = sget_attr(sfinde(driver, xpath[0]), 'href')
@@ -81,7 +82,7 @@ def video_info(video_data):
             item[name] = text or ''
         print(item)
         res.append(item)
-        time.sleep(2)
+        time.sleep(3)
     if res:
         with open("video_result.txt", 'a', encoding='utf8') as f:
             f.write('\n'.join([str(i) for i in res]))
@@ -106,6 +107,9 @@ def user_info(user_urls):
     res = []
     for url in user_urls:
         if url in done:
+            print("跳过")
+            print(url)
+            print("="*100)
             res.append(done[url])
             continue
 
@@ -123,7 +127,7 @@ def user_info(user_urls):
         print(item)
         res.append(item)
         done[url]=item
-        time.sleep(2)
+        time.sleep(3)
     if res:
         with open("user_result.txt", 'a', encoding='utf8') as f:
             f.write('\n'.join(str(i) for i in res))
@@ -132,6 +136,26 @@ def user_info(user_urls):
     return res
 
 import json
+
+title_map = {
+    'video_url':'视频URL',
+    'keyword':'关键词',
+    'video_date_x':'日期',
+    'video_title_x':'标题',
+    'video_awesome_x':'视频点赞数',
+    'video_comment_x':'视频评论数',
+    'video_fans_x':'视频页粉丝数',
+    'video_all_awesome_x':'视频页获赞总数',
+    'video_name_x':'视频页作者名称',
+    'video_dy_link_x':'视频页URL',
+    'user_name_x':'用户名称',
+    'user_code_x':'用户页-抖音号',
+    'user_desc_x':'用户页-描述',
+    'user_fans_x':'用户页-粉丝数',
+    'user_care_x':'用户页-关注数',
+    'user_awesome_x':'用户页-点赞数',
+    'user_piece_x':'用户页作品数',
+}
 
 def main():
     video_page = get_video_list()
@@ -147,7 +171,7 @@ def main():
 
         keys = list(data[0].keys())
         xlsx_data = [[item.get(k, '') for k in keys] for item in data]
-        xlsx_data.insert(0, keys)
+        xlsx_data.insert(0, [title_map[i] for i in keys])
         try:
             w = Writer(f"douyin_{int(time.time())}", 'xlsx')
             w.write(xlsx_data)
